@@ -7,34 +7,46 @@ from os.path import basename
 import sys
 from dropbox import public_link
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+
 parser = ArgumentParser()
 parser.add_argument("dir", help="log file directory", type=str, nargs="?", default="./")
 args = parser.parse_args()
+logging.debug("called with arguments: %s" % args)
+
 basepath = os.path.abspath(args.dir)
+
 if not os.path.isdir(basepath):
     basepath = os.path.dirname(os.path.realpath(__file__))
+    logging.warn("no valid logfile path given using %s instead." % basepath)
 
 
-print("Reading logs from %s" % basepath)
+logging.info("Logfile Path: %s" % basepath)
 
 
 try:
     nc = nextcloud_client.Client.from_public_link(public_link)
 except:
-    print("Connection error")
+    logging.error("Cannot connect to %s" % public_link)
     sys.exit(1)
 
 filepattern = os.path.join(basepath, "*.pqlog")
-print(filepattern)
+logging.debug("Logfile Pattern: %s" % filepattern)
 for logfilename in glob.glob(filepattern):
-    print(logfilename)
+    logging.info("Found: %s" % logfilename)
     pre, ext = os.path.splitext(logfilename)
     zipfilename = pre + ".zip"
-    print(zipfilename)
     zipObj = zipfile.ZipFile(zipfilename, "w")
     zipObj.write(logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED)
+    logging.info("Compressed: %s Into: %s" % logfilename, zipfilename)
     if nc.drop_file(zipfilename):
-        print("success")
+        logging.info("Uploaded: %s" % zipfilename)
         os.remove(logfilename)
+        logging.debug("Deleted: %s" % logfilename)
     else:
+        logging.error("Upload Failed: %s" % zipfilename)
         os.remove(zipfilename)
+logging.info("Done.")
