@@ -1,0 +1,8 @@
+dropbox.py
+.DS_Store
+/dist
+/build
+*.zip
+*.exe
+*.pqlog
+
