@@ -21,7 +21,7 @@ basepath = os.path.abspath(args.dir)
 
 if not os.path.isdir(basepath):
     basepath = os.path.dirname(os.path.realpath(__file__))
-    logging.warn("no valid logfile path given using %s instead." % basepath)
+    logging.warning("No valid logfile path given. Using: %s instead." % basepath)
 
 
 logging.info("Logfile Path: %s" % basepath)
