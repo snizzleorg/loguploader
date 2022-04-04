@@ -13,7 +13,7 @@ public_link=https://<nexcloud-address>
 ```
 
 
-To create an executable which can be run without installing Python first you need https://pyinstaller.readthedocs.io/en/stable/index.html which can be installed like so:
+To create an executable which can be run without installing Python first you need [pyinstaller](https://pyinstaller.readthedocs.io/en/stable/index.html) which can be installed like so:
 
 ```
 pip install pyinstaller
