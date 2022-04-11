@@ -9,7 +9,7 @@ from dropbox import public_link
 
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 parser = ArgumentParser()
@@ -39,9 +39,11 @@ for logfilename in glob.glob(filepattern):
     logging.info("Found: %s" % logfilename)
     pre, ext = os.path.splitext(logfilename)
     zipfilename = pre + ".zip"
+    logging.debug("logfilename: %s" % logfilename)
     zipObj = zipfile.ZipFile(zipfilename, "w")
     zipObj.write(logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED)
-    logging.info("Compressed: %s Into: %s" % logfilename, zipfilename)
+    zipObj.close()
+    logging.info("Compressed: %s Into: %s" % (logfilename, zipfilename))
     if nc.drop_file(zipfilename):
         logging.info("Uploaded: %s" % zipfilename)
         os.remove(logfilename)
