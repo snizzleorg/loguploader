@@ -30,7 +30,7 @@ logging.info(f"Logfile Path: {basepath}")
 try:
     nc = nextcloud_client.Client.from_public_link(public_link)
 except:
-    logging.error("Cannot connect to {public_link}")
+    logging.error(f"Cannot connect to {public_link}")
     sys.exit(1)
 
 filepattern = os.path.join(basepath, "*.pqlog")
