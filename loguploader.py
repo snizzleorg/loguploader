@@ -13,18 +13,18 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 parser = ArgumentParser()
-parser.add_argument("dir", help="log file directory", type=str, nargs="?", default="./")
+parser.add_argument("dir", help="Log Directory", type=str, nargs="?", default="./")
 args = parser.parse_args()
-logging.debug(f"called with arguments: {args}")
+logging.debug(f"Called with Arguments: {args}")
 
 basepath = os.path.abspath(args.dir)
 
 if not os.path.isdir(basepath):
     basepath = os.path.dirname(os.path.realpath(__file__))
-    logging.warning(f"No valid logfile path given. Using: {basepath} instead.")
+    logging.warning(f"No valid Log Directory given. Using: {basepath} instead.")
 
 
-logging.info(f"Logfile Path: {basepath}")
+logging.info(f"Log Directory: {basepath}")
 
 
 try:
@@ -34,12 +34,12 @@ except:
     sys.exit(1)
 
 filepattern = os.path.join(basepath, "*.pqlog")
-logging.debug(f"Logfile Pattern: {filepattern}")
+logging.debug(f"Log File Pattern: {filepattern}")
 for logfilename in glob.glob(filepattern):
     logging.info(f"Found: {logfilename}")
     pre, ext = os.path.splitext(logfilename)
     zipfilename = pre + ".zip"
-    logging.debug(f"logfilename: {logfilename}")
+    logging.debug(f"Log File Name: {logfilename}")
     zipObj = zipfile.ZipFile(zipfilename, "w")
     zipObj.write(logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED)
     zipObj.close()
