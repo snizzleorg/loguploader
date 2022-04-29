@@ -15,40 +15,40 @@ logging.basicConfig(level=logging.DEBUG)
 parser = ArgumentParser()
 parser.add_argument("dir", help="log file directory", type=str, nargs="?", default="./")
 args = parser.parse_args()
-logging.debug("called with arguments: %s" % args)
+logging.debug(f"called with arguments: {args}")
 
 basepath = os.path.abspath(args.dir)
 
 if not os.path.isdir(basepath):
     basepath = os.path.dirname(os.path.realpath(__file__))
-    logging.warning("No valid logfile path given. Using: %s instead." % basepath)
+    logging.warning(f"No valid logfile path given. Using: {basepath} instead.")
 
 
-logging.info("Logfile Path: %s" % basepath)
+logging.info(f"Logfile Path: {basepath}")
 
 
 try:
     nc = nextcloud_client.Client.from_public_link(public_link)
 except:
-    logging.error("Cannot connect to %s" % public_link)
+    logging.error("Cannot connect to {public_link}")
     sys.exit(1)
 
 filepattern = os.path.join(basepath, "*.pqlog")
-logging.debug("Logfile Pattern: %s" % filepattern)
+logging.debug(f"Logfile Pattern: {filepattern}")
 for logfilename in glob.glob(filepattern):
-    logging.info("Found: %s" % logfilename)
+    logging.info(f"Found: {logfilename}")
     pre, ext = os.path.splitext(logfilename)
     zipfilename = pre + ".zip"
-    logging.debug("logfilename: %s" % logfilename)
+    logging.debug(f"logfilename: {logfilename}")
     zipObj = zipfile.ZipFile(zipfilename, "w")
     zipObj.write(logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED)
     zipObj.close()
-    logging.info("Compressed: %s Into: %s" % (logfilename, zipfilename))
+    logging.info(f"Compressed: {logfilename} into: {zipfilename}")
     if nc.drop_file(zipfilename):
-        logging.info("Uploaded: %s" % zipfilename)
+        logging.info(f"Uploaded: {zipfilename}")
         os.remove(logfilename)
-        logging.debug("Deleted: %s" % logfilename)
+        logging.debug(f"Deleted: {logfilename}")
     else:
-        logging.error("Upload Failed: %s" % zipfilename)
+        logging.error(f"Upload Failed: {zipfilename}")
         os.remove(zipfilename)
 logging.info("Done.")
