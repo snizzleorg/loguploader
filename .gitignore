@@ -9,3 +9,4 @@ dropbox.py
 *.pic
 Pipfile
 Pipfile.lock
+/_pycache_
