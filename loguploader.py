@@ -2,11 +2,9 @@ import nextcloud_client
 import glob
 import os
 import zipfile
-from argparse import ArgumentParser
 from os.path import basename
 import sys
 from dropbox import public_link
-import logging
 import time
 
 import win32serviceutil  # ServiceFramework and commandline helper
@@ -27,6 +25,7 @@ class LumiLogUploadService:
         while self.running:
             time.sleep(10)  # Important work
             servicemanager.LogInfoMsg("Service running...")
+            upload()
 
 
 class LumiLogUploadServiceFramework(win32serviceutil.ServiceFramework):
@@ -59,48 +58,42 @@ def init():
 
 
 def upload():
-    logging.basicConfig(level=logging.DEBUG)
 
-    parser = ArgumentParser()
-    parser.add_argument("dir", help="Log Directory", type=str, nargs="?", default="./")
-    args = parser.parse_args()
-    logging.debug(f"Called with Arguments: {args}")
-
-    basepath = os.path.abspath(args.dir)
+    basepath = ""
 
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
-        logging.warning(f"No valid Log Directory given. Using: {basepath} instead.")
+        servicemanager.LogInfoMsg(
+            f"No valid Log Directory given. Using: {basepath} instead."
+        )
 
-    logging.info(f"Log Directory: {basepath}")
+    servicemanager.LogInfoMsg(f"Log Directory: {basepath}")
 
     try:
         nc = nextcloud_client.Client.from_public_link(public_link)
+        filepattern = os.path.join(basepath, "*.pqlog")
+        servicemanager.LogInfoMsg(f"Log File Pattern: {filepattern}")
+        for logfilename in glob.glob(filepattern):
+            servicemanager.LogInfoMsg(f"Found: {logfilename}")
+            pre, ext = os.path.splitext(logfilename)
+            zipfilename = pre + ".zip"
+            servicemanager.LogInfoMsg(f"Log File Name: {logfilename}")
+            zipObj = zipfile.ZipFile(zipfilename, "w")
+            zipObj.write(
+                logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED
+            )
+            zipObj.close()
+            servicemanager.LogInfoMsg(f"Compressed: {logfilename} into: {zipfilename}")
+            if nc.drop_file(zipfilename):
+                servicemanager.LogInfoMsg(f"Uploaded: {zipfilename}")
+                os.remove(logfilename)
+                servicemanager.LogInfoMsg(f"Deleted: {logfilename}")
+            else:
+                servicemanager.LogInfoMsg(f"Upload Failed: {zipfilename}")
+                os.remove(zipfilename)
+        servicemanager.LogInfoMsg("Done.")
     except:
-        logging.error(f"Cannot connect to {public_link}")
-        sys.exit(1)
-
-    filepattern = os.path.join(basepath, "*.pqlog")
-    logging.debug(f"Log File Pattern: {filepattern}")
-    for logfilename in glob.glob(filepattern):
-        logging.info(f"Found: {logfilename}")
-        pre, ext = os.path.splitext(logfilename)
-        zipfilename = pre + ".zip"
-        logging.debug(f"Log File Name: {logfilename}")
-        zipObj = zipfile.ZipFile(zipfilename, "w")
-        zipObj.write(
-            logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED
-        )
-        zipObj.close()
-        logging.info(f"Compressed: {logfilename} into: {zipfilename}")
-        if nc.drop_file(zipfilename):
-            logging.info(f"Uploaded: {zipfilename}")
-            os.remove(logfilename)
-            logging.debug(f"Deleted: {logfilename}")
-        else:
-            logging.error(f"Upload Failed: {zipfilename}")
-            os.remove(zipfilename)
-    logging.info("Done.")
+        servicemanager.LogInfoMsg(f"Cannot connect to {public_link}")
 
 
 if __name__ == "__main__":
