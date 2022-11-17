@@ -21,8 +21,6 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-icon=log.ico
-
 exe = EXE(
     pyz,
     a.scripts,
@@ -43,4 +41,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['log.ico'],
 )
