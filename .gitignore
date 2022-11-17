@@ -6,5 +6,6 @@ dropbox.py
 *.exe
 *.pqlog
 *.spec
+*.pic
 Pipfile
 Pipfile.lock

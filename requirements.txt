@@ -1,1 +1,3 @@
-pyncclient==0.7
+pyncclient
+pywin32y
+pyinstaller
