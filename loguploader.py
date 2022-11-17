@@ -7,9 +7,8 @@ from argparse import ArgumentParser
 from dropbox import public_link
 
 
-def upload(basepath):
+def upload(basepath=""):
 
-    basepath = ""
 
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
