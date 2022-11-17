@@ -3,6 +3,7 @@ import win32serviceutil  # ServiceFramework and commandline helper
 import win32service  # Events
 import servicemanager  # Simple setup and logging
 import loguploader
+import sys
 
 
 class LumiLogUploadService:

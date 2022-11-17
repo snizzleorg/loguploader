@@ -38,6 +38,7 @@ def upload(basepath):
 
 
 if __name__ == "__main__":
+
     parser = ArgumentParser()
     parser.add_argument("dir", help="Log Directory", type=str, nargs="?", default="./")
     args = parser.parse_args()
