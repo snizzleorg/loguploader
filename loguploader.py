@@ -18,10 +18,10 @@ def upload(basepath="", serialnumber=""):
         nc = nextcloud_client.Client.from_public_link(public_link)
         filepattern = os.path.join(basepath, "*.pqlog")
         logfiles = glob.glob(filepattern)
-        for logfilename in logfiles:
+        logfiles.sort()
+        for logfilename in logfiles[:-1]:
             pre, ext = os.path.splitext(os.path.basename(logfilename))
             zipfilename = os.path.join(basepath, serialnumber + "_" + pre + ".zip")
-            print(zipfilename)
             zipObj = zipfile.ZipFile(zipfilename, "w")
             zipObj.write(
                 logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED
