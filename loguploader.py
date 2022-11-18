@@ -84,6 +84,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     basepath = os.path.abspath(args.dir)
+    print(f"trying to find {basepath}")
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
         print(f"Directory not found defaulting to {basepath}")

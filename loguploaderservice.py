@@ -17,7 +17,7 @@ class LumiLogUploadService:
         """Main service loop. This is where work is done!"""
         self.running = True
         while self.running:
-            time.sleep(10)  # Important work
+            time.sleep(60)
             # servicemanager.LogInfoMsg("Service running...")
             servicemanager.LogInfoMsg(loguploader.upload())
 
