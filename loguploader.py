@@ -24,7 +24,7 @@ def getLumiSerial(basepath):
         for filename in logfiles:
             fp = open(filename, "r", encoding="latin1")
             data = fp.read()
-            match = re.search(r";Device System with Serial .* is ok", data)
+            match = re.search(r";Device System with Serial .* is ok.", data)
             if match:
                 line = match.group()
                 serial = line.split(" ")[4]
