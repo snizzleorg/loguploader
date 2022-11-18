@@ -10,3 +10,5 @@ Pipfile
 Pipfile.lock
 /_pycache_
 JennyDB.xml
+temp*
+serial.txt
