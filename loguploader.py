@@ -7,17 +7,18 @@ from argparse import ArgumentParser
 from dropbox import public_link
 from systemdb import getSerialFromJennyDB
 import re
+import winpath
+import sys
 
 
 def getLumiSerial(basepath):
-    if not os.path.isdir(basepath):
-        basepath = os.path.dirname(os.path.realpath(__file__))
 
     filename = os.path.join(basepath, "serial.txt")
     try:
         fp = open(filename, "r")
         serial = fp.read()
-    # print(f"Serial {serial} read from {filename}")
+        # print(f"Serial {serial} read from {filename}")
+        return serial
     except:
         filepattern = os.path.join(basepath, "*.pqlog")
         logfiles = glob.glob(filepattern)
@@ -34,12 +35,10 @@ def getLumiSerial(basepath):
                     f.write(serial)
                     f.close()
                 # print(f"Serial {serial} written to {filename}")
-                break
-            else:
-                continue
+                fp.close()
+                return serial
             fp.close()
-
-    return serial
+        return False
 
 
 def upload(basepath="", serialnumber=""):
@@ -73,12 +72,21 @@ def upload(basepath="", serialnumber=""):
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32":  # WinPath will only work on Windows
+        path = winpath.get_common_appdata()
+        defaultDir = os.path.join(path, "Luminosa", "Logs")
+    else:
+        defaultDir = "./"
 
     parser = ArgumentParser()
-    parser.add_argument("dir", help="Log Directory", type=str, nargs="?", default="./")
+    parser.add_argument(
+        "dir", help="Log Directory", type=str, nargs="?", default=defaultDir
+    )
     args = parser.parse_args()
     basepath = os.path.abspath(args.dir)
-    # serialnumber = getSerialFromJennyDB()
+    if not os.path.isdir(basepath):
+        basepath = os.path.dirname(os.path.realpath(__file__))
+        print(f"Directory not found defaulting to {basepath}")
     serialnumber = getLumiSerial(basepath)
     if not serialnumber:
         print(f"Error getting Luminosa Serial Number")
