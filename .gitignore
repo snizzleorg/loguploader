@@ -6,8 +6,6 @@ dropbox.py
 *.exe
 *.pqlog
 *.pic
-Pipfile
-Pipfile.lock
 _pycache_/
 JennyDB.xml
 temp*
