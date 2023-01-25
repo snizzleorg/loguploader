@@ -3,7 +3,7 @@
 
 
 ```
-git pull https://github.com/snizzleorg/loguploader.git
+git pull https://github.com/snizzleorg/loguploader-service.git
 cd logupdater
 pip install -r requirements.txt
 ```
