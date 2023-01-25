@@ -7,7 +7,7 @@ git pull https://github.com/snizzleorg/loguploader.git
 cd logupdater
 pip install -r requirements.txt
 ```
-then create a file `dropbox.py` with the public link for the nextcloud dropbox folder:
+then create a file `settings.py` with the public link for the nextcloud dropbox folder:
 ```
 public_link=https://<nexcloud-address>
 ```
