@@ -11,3 +11,4 @@ JennyDB.xml
 temp*
 serial.txt
 *.spec
+settings.py
