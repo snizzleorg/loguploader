@@ -26,3 +26,11 @@ python -m pyinstaller --onefile logupdater.py
 ```
  
  This should create `dist\logupdater.exe` which can be deployed directly without the need to install anything.
+
+## for building sthe service:
+
+see here: https://metallapan.se/post/windows-service-pywin32-pyinstaller/
+
+python -m PyInstaller --onefile --hidden-import win32timezone .\loguploaderservice.py
+
+## Installing the service

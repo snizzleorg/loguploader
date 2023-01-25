@@ -4,56 +4,37 @@ import os
 import zipfile
 from os.path import basename
 from argparse import ArgumentParser
-from dropbox import public_link
-from systemdb import getSerialFromJennyDB
-import re
+import settings
 import winpath
 import sys
+import subprocess
 
 
 def getLumiSerial(basepath):
 
-    filename = os.path.join(basepath, "serial.txt")
+    filename = os.path.join(basepath, "LastOpenSerial.txt")
     try:
         fp = open(filename, "r")
         serial = fp.read()
         # print(f"Serial {serial} read from {filename}")
         return serial
     except:
-        filepattern = os.path.join(basepath, "*.pqlog")
-        logfiles = glob.glob(filepattern)
-        for filename in logfiles:
-            fp = open(filename, "r", encoding="latin1")
-            data = fp.read()
-            match = re.search(r";Device System with Serial .* is ok.", data)
-            if match:
-                line = match.group()
-                serial = line.split(" ")[4]
-                # print(f"Serial {serial} found in {filename}")
-                filename = os.path.join(basepath, "serial.txt")
-                with open(filename, "w") as f:
-                    f.write(serial)
-                    f.close()
-                # print(f"Serial {serial} written to {filename}")
-                fp.close()
-                return serial
-            fp.close()
-        return False
+        return "0000000"
 
 
-def upload(basepath="", serialnumber=""):
+def upload(basepath="", serialnumber="0000000", current_machine_id = "00000000-0000-0000-0000-000000000000"):
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
         return False
     returntxt = f"LogDir: {basepath}\n"
     try:
-        nc = nextcloud_client.Client.from_public_link(public_link)
+        nc = nextcloud_client.Client.from_public_link(settings.public_link)
         filepattern = os.path.join(basepath, "*.pqlog")
         logfiles = glob.glob(filepattern)
         logfiles.sort()
         for logfilename in logfiles[:-1]:
             pre, ext = os.path.splitext(os.path.basename(logfilename))
-            zipfilename = os.path.join(basepath, serialnumber + "_" + pre + ".zip")
+            zipfilename = os.path.join(basepath, serialnumber + "_" + current_machine_id + "_" + pre + ".zip")
             zipObj = zipfile.ZipFile(zipfilename, "w")
             zipObj.write(
                 logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED
@@ -71,26 +52,45 @@ def upload(basepath="", serialnumber=""):
     return returntxt
 
 
-if __name__ == "__main__":
+def init():
     if sys.platform == "win32":  # WinPath will only work on Windows
         path = winpath.get_common_appdata()
-        defaultDir = os.path.join(path, "Luminosa", "Logs")
+        defaultDir = os.path.join(path, "PicoQuant", "Luminosa", "Logs")
+        current_machine_id = (
+            subprocess.check_output("wmic csproduct get uuid")
+            .decode()
+            .split("\n")[1]
+            .strip()
+        )
+        print(f"Machine ID: {current_machine_id}")
     else:
         defaultDir = "./"
+        current_machine_id = "00000000-0000-0000-0000-000000000000"
+        
+    basepath = os.path.abspath(defaultDir)
+    serialnumber = getLumiSerial(basepath)
+    
+    return [defaultDir, serialnumber, current_machine_id]
+
+
+if __name__ == "__main__":
+    [defaultDir, serialnumber,current_machine_id] = init()
 
     parser = ArgumentParser()
     parser.add_argument(
         "dir", help="Log Directory", type=str, nargs="?", default=defaultDir
     )
     args = parser.parse_args()
-    basepath = os.path.abspath(args.dir)
+
+    if os.path.isdir(os.path.abspath(args.dir)):
+        basepath = os.path.abspath(args.dir)
+    else:
+        basepath = os.path.abspath(defaultDir)
+
     print(f"trying to find {basepath}")
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
         print(f"Directory not found defaulting to {basepath}")
-    serialnumber = getLumiSerial(basepath)
-    if not serialnumber:
-        print(f"Error getting Luminosa Serial Number")
-    else:
+
         print(f"Luminosa Serial Number: {serialnumber}")
-        print(upload(basepath, serialnumber))
+        print(upload(basepath, serialnumber, current_machine_id))
