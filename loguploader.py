@@ -16,7 +16,8 @@ def getLumiSerial(basepath):
     try:
         fp = open(filename, "r")
         serial = fp.read()
-        # print(f"Serial {serial} read from {filename}")
+        serial = serial.split()[-1:][0]
+        print(f"Serial {serial} read from {filename}")
         return serial
     except:
         return "0000000"
@@ -25,16 +26,16 @@ def getLumiSerial(basepath):
 def upload(basepath="", serialnumber="0000000", current_machine_id = "00000000-0000-0000-0000-000000000000"):
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
-        return False
+
     returntxt = f"LogDir: {basepath}\n"
-    try:
-        nc = nextcloud_client.Client.from_public_link(settings.public_link)
+    nc = nextcloud_client.Client.from_public_link(settings.public_link)
+    if nc:
         filepattern = os.path.join(basepath, "*.pqlog")
         logfiles = glob.glob(filepattern)
         logfiles.sort()
         for logfilename in logfiles[:-1]:
             pre, ext = os.path.splitext(os.path.basename(logfilename))
-            zipfilename = os.path.join(basepath, serialnumber + "_" + current_machine_id + "_" + pre + ".zip")
+            zipfilename = os.path.join(basepath, f"{serialnumber}_{current_machine_id}_{pre}.zip")
             zipObj = zipfile.ZipFile(zipfilename, "w")
             zipObj.write(
                 logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED
@@ -47,7 +48,7 @@ def upload(basepath="", serialnumber="0000000", current_machine_id = "00000000-0
             else:
                 returntxt = returntxt + f"Upload Failed: {zipfilename}\n"
                 os.remove(zipfilename)
-    except:
+    else:
         returntxt = returntxt + f"Connection failed"
     return returntxt
 
@@ -93,4 +94,4 @@ if __name__ == "__main__":
         print(f"Directory not found defaulting to {basepath}")
 
         print(f"Luminosa Serial Number: {serialnumber}")
-        print(upload(basepath, serialnumber, current_machine_id))
+    print(upload(basepath, serialnumber, current_machine_id))

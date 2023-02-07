@@ -17,7 +17,7 @@ class LumiLogUploadService:
         """Main service loop. This is where work is done!"""
         self.running = True
         while self.running:
-            time.sleep(60)
+            time.sleep(300)
             # servicemanager.LogInfoMsg("Service running...")
             [defaultDir, serialnumber, currentMachineID] = loguploader.init()
             servicemanager.LogInfoMsg(f"Log Directory: {defaultDir}")
