@@ -5,4 +5,12 @@ dropbox.py
 *.zip
 *.exe
 *.pqlog
+*.pic
+_pycache_/
+JennyDB.xml
+temp*
+serial.txt
 *.spec
+settings.py
+__pycache__/loguploaderservice.cpython-310.pyc
+__pycache__/loguploader.cpython-310.pyc

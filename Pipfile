@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyncclient = "*"
+pywin32y = "*"
+pyinstaller = "*"
+pywin32 = "*"
+winpath = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"

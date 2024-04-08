@@ -3,11 +3,11 @@
 
 
 ```
-git pull https://github.com/snizzleorg/loguploader.git
+git pull https://github.com/snizzleorg/loguploader-service.git
 cd logupdater
 pip install -r requirements.txt
 ```
-then create a file `dropbox.py` with the public link for the nextcloud dropbox folder:
+then create a file `settings.py` with the public link for the nextcloud dropbox folder:
 ```
 public_link=https://<nexcloud-address>
 ```
@@ -26,3 +26,11 @@ python -m pyinstaller --onefile logupdater.py
 ```
  
  This should create `dist\logupdater.exe` which can be deployed directly without the need to install anything.
+
+## for building sthe service:
+
+see here: https://metallapan.se/post/windows-service-pywin32-pyinstaller/
+
+python -m PyInstaller --onefile --hidden-import win32timezone .\loguploaderservice.py
+
+## Installing the service
