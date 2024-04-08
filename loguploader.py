@@ -27,6 +27,9 @@ def has_file_changed(file_path):
                 last_check_time = float(file.read())
         except (FileNotFoundError, ValueError):
             # Return True if the file doesn't exist or if there's an issue reading the time
+            # Update the last check time for the next iteration
+            with open(last_check_file, "w") as file:
+                file.write(str(time.time()))
             return True
 
         # Compare with the last check time
@@ -69,7 +72,7 @@ def uploadlog(
         filepattern = os.path.join(basepath, "*.pqlog")
         logfiles = glob.glob(filepattern)
         logfiles.sort()
-        for logfilename in logfiles[:-1]:
+        for logfilename in logfiles:
             pre, ext = os.path.splitext(os.path.basename(logfilename))
             zipfilename = os.path.join(
                 basepath, f"{serialnumber}_{current_machine_id}_{pre}.zip"
@@ -96,16 +99,49 @@ def uploadSettings(
     serialnumber="0000000",
     current_machine_id="00000000-0000-0000-0000-000000000000",
 ):
+    import datetime as dt
+
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
 
-    return True
+    returntxt = f"SettingsDir: {basepath}\n"
+    nc = nextcloud_client.Client.from_public_link(settings.public_link)
+    if nc:
+        filepattern = os.path.join(basepath, "*.xml")
+        settingsFiles = glob.glob(filepattern)
+        settingsFiles.sort()
+        for settingsFileName in settingsFiles:
+            if has_file_changed(settingsFileName):
+                pre, ext = os.path.splitext(os.path.basename(settingsFileName))
+                timestamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
+                zipfilename = os.path.join(
+                    basepath,
+                    f"{serialnumber}_{current_machine_id}_{pre}_{timestamp}.zip",
+                )
+                zipObj = zipfile.ZipFile(zipfilename, "w")
+                zipObj.write(
+                    settingsFileName,
+                    basename(settingsFileName),
+                    compress_type=zipfile.ZIP_DEFLATED,
+                )
+                zipObj.close()
+                
+                if nc.drop_file(zipfilename):
+                    returntxt = returntxt + f"Uploaded: {zipfilename}\n"
+                    os.remove(zipfilename)
+                else:
+                    returntxt = returntxt + f"Upload Failed: {zipfilename}\n"
+                    os.remove(zipfilename)
+    else:
+        returntxt = returntxt + f"Connection failed"
+    return returntxt
 
 
 def init():
     if sys.platform == "win32":  # WinPath will only work on Windows
         path = winpath.get_common_appdata()
         defaultLogDir = os.path.join(path, "PicoQuant", "Luminosa")
+        print(defaultLogDir)
         current_machine_id = (
             subprocess.check_output("wmic csproduct get uuid")
             .decode()
@@ -144,3 +180,4 @@ if __name__ == "__main__":
 
         print(f"Luminosa Serial Number: {serialnumber}")
     print(uploadlog(basepath, serialnumber, current_machine_id))
+    print(uploadSettings(basepath, serialnumber, current_machine_id))

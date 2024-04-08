@@ -6,6 +6,7 @@ import loguploader
 import sys
 import win32timezone
 
+
 class LumiLogUploadService:
     """Luminosa Log Upload Service"""
 
@@ -17,19 +18,27 @@ class LumiLogUploadService:
         """Main service loop. This is where work is done!"""
         self.running = True
         while self.running:
-            time.sleep(300)
-            # servicemanager.LogInfoMsg("Service running...")
+            servicemanager.LogInfoMsg("Service running...")
             [defaultDir, serialnumber, currentMachineID] = loguploader.init()
             servicemanager.LogInfoMsg(f"Log Directory: {defaultDir}")
             servicemanager.LogInfoMsg(f"System Serial Number: {serialnumber}")
             servicemanager.LogInfoMsg(f"ID: {currentMachineID}")
-            servicemanager.LogInfoMsg(
-                loguploader.upload(basepath=defaultDir, serialnumber=serialnumber, current_machine_id=currentMachineID)
+            rtn = loguploader.uploadlog(
+                basepath=defaultDir,
+                serialnumber=serialnumber,
+                current_machine_id=currentMachineID,
             )
+            servicemanager.LogInfoMsg(rtn)
+            rtn = loguploader.uploadSettings(
+                basepath=defaultDir,
+                serialnumber=serialnumber,
+                current_machine_id=currentMachineID,
+            )
+            servicemanager.LogInfoMsg(rtn)
+            time.sleep(300)
 
 
 class LumiLogUploadServiceFramework(win32serviceutil.ServiceFramework):
-
     _svc_name_ = "LumiLogUploadService"
     _svc_display_name_ = "Luminosa Log Upload Service"
 
