@@ -23,6 +23,8 @@ class LumiLogUploadService:
             servicemanager.LogInfoMsg(f"Log Directory: {defaultDir}")
             servicemanager.LogInfoMsg(f"System Serial Number: {serialnumber}")
             servicemanager.LogInfoMsg(f"ID: {currentMachineID}")
+            rtn = loguploader.copyDB(basepath=defaultDir)
+            servicemanager.LogInfoMsg(rtn)
             rtn = loguploader.uploadlog(
                 basepath=defaultDir,
                 serialnumber=serialnumber,
@@ -30,6 +32,12 @@ class LumiLogUploadService:
             )
             servicemanager.LogInfoMsg(rtn)
             rtn = loguploader.uploadSettings(
+                basepath=defaultDir,
+                serialnumber=serialnumber,
+                current_machine_id=currentMachineID,
+            )
+            servicemanager.LogInfoMsg(rtn)
+            rtn = loguploader.uploadLaserPowerLog(
                 basepath=defaultDir,
                 serialnumber=serialnumber,
                 current_machine_id=currentMachineID,

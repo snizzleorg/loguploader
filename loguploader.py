@@ -8,6 +8,8 @@ import settings
 import winpath
 import sys
 import subprocess
+import shutil
+import datetime
 
 
 def has_file_changed(file_path):
@@ -73,9 +75,67 @@ def uploadlog(
         logfiles = glob.glob(filepattern)
         logfiles.sort()
         for logfilename in logfiles:
+            # try to see if the file is open
+            try:
+                os.rename(logfilename, logfilename)
+            except OSError:
+                returntxt = returntxt + f"File is open"
+                return returntxt
             pre, ext = os.path.splitext(os.path.basename(logfilename))
             zipfilename = os.path.join(
                 basepath, f"{serialnumber}_{current_machine_id}_{pre}.zip"
+            )
+            zipObj = zipfile.ZipFile(zipfilename, "w")
+            zipObj.write(
+                logfilename, basename(logfilename), compress_type=zipfile.ZIP_DEFLATED
+            )
+            zipObj.close()
+
+            if nc.drop_file(zipfilename):
+                returntxt = returntxt + f"Uploaded: {zipfilename}\n"
+                os.remove(logfilename)
+            else:
+                returntxt = returntxt + f"Upload Failed: {zipfilename}\n"
+                os.remove(zipfilename)
+    else:
+        returntxt = returntxt + f"Connection failed"
+    return returntxt
+
+
+def uploadLaserPowerLog(
+    basepath="",
+    serialnumber="0000000",
+    current_machine_id="00000000-0000-0000-0000-000000000000",
+):
+
+    if not os.path.isdir(basepath):
+        basepath = os.path.dirname(os.path.realpath(__file__))
+
+    returntxt = f"LaserPower.log Dir: {basepath}\n"
+    nc = nextcloud_client.Client.from_public_link(settings.public_link)
+    if nc:
+        filepattern = os.path.join(basepath, "LaserPower.log")
+        logfiles = glob.glob(filepattern)
+        logfiles.sort()
+        for logfilename in logfiles:
+            # try to see if the file is open
+            try:
+                os.rename(logfilename, logfilename)
+            except OSError:
+                returntxt = returntxt + f"File is open"
+                return returntxt
+
+            # Get the file modification time (Unix timestamp)
+            mod_time = os.path.getmtime(logfilename)
+
+            # Convert the timestamp to a readable date format (e.g., YYYY-MM-DD)
+            mod_time_str = datetime.datetime.fromtimestamp(mod_time).strftime(
+                "%Y%m%d%H%M%S"
+            )
+            pre, ext = os.path.splitext(os.path.basename(logfilename))
+            zipfilename = os.path.join(
+                basepath,
+                f"{serialnumber}_{current_machine_id}_{pre}_{mod_time_str}.zip",
             )
             zipObj = zipfile.ZipFile(zipfilename, "w")
             zipObj.write(
@@ -125,7 +185,7 @@ def uploadSettings(
                     compress_type=zipfile.ZIP_DEFLATED,
                 )
                 zipObj.close()
-                
+
                 if nc.drop_file(zipfilename):
                     returntxt = returntxt + f"Uploaded: {zipfilename}\n"
                     os.remove(zipfilename)
@@ -137,11 +197,37 @@ def uploadSettings(
     return returntxt
 
 
+def copyDB(
+    basepath="",
+):
+    import datetime as dt
+
+    sourcepath = "C:/Program Files/PicoQuant/Luminosa/"
+
+    if not os.path.isdir(basepath):
+        basepath = os.path.dirname(os.path.realpath(__file__))
+
+    returntxt = f"DBDir: {basepath}\n"
+
+    source_file = os.path.join(sourcepath, "PQDevice.db")
+    destination_file = os.path.join(basepath, "PQDevice.db.xml")
+
+    shutil.copy2(source_file, destination_file)
+    returntxt += f"File copied from {source_file} to {destination_file}\n"
+
+    source_file = os.path.join(sourcepath, "PQDevice.conf")
+    destination_file = os.path.join(basepath, "PQDevice.conf.xml")
+
+    shutil.copy2(source_file, destination_file)
+    returntxt += f"File copied from {source_file} to {destination_file}\n"
+
+    return returntxt
+
+
 def init():
     if sys.platform == "win32":  # WinPath will only work on Windows
         path = winpath.get_common_appdata()
-        defaultLogDir = os.path.join(path, "PicoQuant", "Luminosa")
-        print(defaultLogDir)
+        defaultDir = os.path.join(path, "PicoQuant", "Luminosa")
         current_machine_id = (
             subprocess.check_output("wmic csproduct get uuid")
             .decode()
@@ -150,13 +236,13 @@ def init():
         )
         print(f"Machine ID: {current_machine_id}")
     else:
-        defaultLogDir = "./"
+        defaultDir = "./"
         current_machine_id = "00000000-0000-0000-0000-000000000000"
 
-    basepath = os.path.abspath(defaultLogDir)
+    basepath = os.path.abspath(defaultDir)
     serialnumber = getLumiSerial(basepath)
 
-    return [defaultLogDir, serialnumber, current_machine_id]
+    return [defaultDir, serialnumber, current_machine_id]
 
 
 if __name__ == "__main__":
@@ -180,4 +266,6 @@ if __name__ == "__main__":
 
         print(f"Luminosa Serial Number: {serialnumber}")
     print(uploadlog(basepath, serialnumber, current_machine_id))
+    print(copyDB(basepath))
     print(uploadSettings(basepath, serialnumber, current_machine_id))
+    print(uploadLaserPowerLog(basepath, serialnumber, current_machine_id))
