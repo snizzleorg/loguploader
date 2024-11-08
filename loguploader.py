@@ -163,8 +163,53 @@ def uploadSettings(
 
     if not os.path.isdir(basepath):
         basepath = os.path.dirname(os.path.realpath(__file__))
-
+    basepath = os.path.join(basepath, "")
     returntxt = f"SettingsDir: {basepath}\n"
+
+    nc = nextcloud_client.Client.from_public_link(settings.public_link)
+    if nc:
+        filepattern = os.path.join(basepath, "*.xml")
+        settingsFiles = glob.glob(filepattern)
+        settingsFiles.sort()
+        for settingsFileName in settingsFiles:
+            if has_file_changed(settingsFileName):
+                pre, ext = os.path.splitext(os.path.basename(settingsFileName))
+                timestamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
+                zipfilename = os.path.join(
+                    basepath,
+                    f"{serialnumber}_{current_machine_id}_{pre}_{timestamp}.zip",
+                )
+                zipObj = zipfile.ZipFile(zipfilename, "w")
+                zipObj.write(
+                    settingsFileName,
+                    basename(settingsFileName),
+                    compress_type=zipfile.ZIP_DEFLATED,
+                )
+                zipObj.close()
+
+                if nc.drop_file(zipfilename):
+                    returntxt = returntxt + f"Uploaded: {zipfilename}\n"
+                    os.remove(zipfilename)
+                else:
+                    returntxt = returntxt + f"Upload Failed: {zipfilename}\n"
+                    os.remove(zipfilename)
+    else:
+        returntxt = returntxt + f"Connection failed"
+    return returntxt
+
+
+def uploadUserSettings(
+    basepath="",
+    serialnumber="0000000",
+    current_machine_id="00000000-0000-0000-0000-000000000000",
+):
+    import datetime as dt
+
+    if not os.path.isdir(basepath):
+        basepath = os.path.dirname(os.path.realpath(__file__))
+    basepath = os.path.join(basepath, "UserSettings")
+
+    returntxt = f"UserSettingsDir: {basepath}\n"
     nc = nextcloud_client.Client.from_public_link(settings.public_link)
     if nc:
         filepattern = os.path.join(basepath, "*.xml")
@@ -265,7 +310,9 @@ if __name__ == "__main__":
         print(f"Directory not found defaulting to {basepath}")
 
         print(f"Luminosa Serial Number: {serialnumber}")
-    print(uploadlog(basepath, serialnumber, current_machine_id))
+
     print(copyDB(basepath))
     print(uploadSettings(basepath, serialnumber, current_machine_id))
+    print(uploadUserSettings(basepath, serialnumber, current_machine_id))
     print(uploadLaserPowerLog(basepath, serialnumber, current_machine_id))
+    print(uploadlog(basepath, serialnumber, current_machine_id))
